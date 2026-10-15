@@ -18,6 +18,7 @@ const audioInput = $('#audio-input');
 const playlist = $('#playlist');
 const qualityInput = $('#image-quality');
 const nowPlaying = $('#now-playing');
+const loopLabel = $('#loop-label');
 
 let selectedFile = null;
 let frames = [];
@@ -70,17 +71,22 @@ function playTrack(index = currentTrackIndex) {
   if (!audioTracks.length) return;
   currentTrackIndex = (index + audioTracks.length) % audioTracks.length;
   const track = audioTracks[currentTrackIndex];
+  ambientAudio.loop = false;
   ambientAudio.src = track.url;
   ambientAudio.load();
   nowPlaying.textContent = trackLabel(track);
+  if (loopLabel) loopLabel.textContent = `${String(currentTrackIndex + 1).padStart(2, '0')} / ${String(audioTracks.length).padStart(2, '0')}`;
   ambientAudio.play().then(() => ambientVideo.play().catch(() => {})).catch(() => {
     showToast('اضغط زر الموسيقى مرة واحدة للسماح بالتشغيل التلقائي.');
   });
   renderPlaylist();
 }
 
+ambientAudio.loop = false;
+ambientAudio.addEventListener('play', () => { document.body.classList.add('music-active'); renderPlaylist(); });
+ambientAudio.addEventListener('pause', () => { document.body.classList.remove('music-active'); renderPlaylist(); });
 ambientAudio.addEventListener('ended', () => {
-  if (audioTracks.length) playTrack(currentTrackIndex + 1);
+  if (audioTracks.length) playTrack((currentTrackIndex + 1) % audioTracks.length);
 });
 
 $('#add-audio-button').addEventListener('click', () => audioInput.click());
